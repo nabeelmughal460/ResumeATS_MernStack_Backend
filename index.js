@@ -21,13 +21,20 @@ const PORT = process.env.PORT || 4000;
 app.use(cors({
     credentials: true,
     // origin: 'http://localhost:5173',//or local server
+    credentials: true,
     origin:"*" //for vercel deployment
 
 }));
 app.use(express.json()); 
 app.use('/api/resume',resumeroute);  
 app.use('/api/user',userroute);
- 
+
+// Health Check Route (Important for Railway!)
+// This ensures Railway sees the app as "Healthy" even if the frontend isn't built yet.
+app.get('/health', (req, res) => {
+    res.status(200).send('Backend is healthy and running!');
+});
+
 // serve static files from the React frontend app  build folder
 app.use(express.static(path.join(__dirname,"build")));
 // handle React routing, return  index.js all requests to React app   
