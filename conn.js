@@ -38,3 +38,12 @@
 
 // // add middleware to check connection before each request
 
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+dotenv.config();
+
+mongoose.connect(process.env.MONGODB_URI).then((res)=>{
+    console.log("Database Connected Successfully");
+}).catch(err=>{
+    console.log("Something Error",err);
+})
