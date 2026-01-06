@@ -1,6 +1,4 @@
-// import dotenv from 'dotenv';
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -9,50 +7,47 @@ const userroute = require('./Routes/userroute');
 const resumeroute = require('./Routes/resumeroute');
 
 const app = express();
+
+// IMPORTANT: Railway provides the PORT. We must use process.env.PORT.
 const PORT = process.env.PORT || 8080;
 
 // Connect to MongoDB
 connectToMongoDB();
 
-// Middleware
+// 1. MIDDLEWARE
 app.use(cors({
-    credentials: true,
-    origin: "*" // Allow all origins for now (good for debugging)
+    origin: "*",
+    credentials: true
 }));
 app.use(express.json());
 
-// API Routes
+// 2. RAILWAY HEALTH CHECK (Add this BEFORE other routes)
+// This ensures Railway stays connected even if the build folder is missing.
+app.get('/', (req, res) => {
+    res.status(200).send("Server is live and healthy! 😀");
+});
+
+// 3. API ROUTES
 app.use('/api/resume', resumeroute);
 app.use('/api/user', userroute);
 
-// Health Check Route (Important for Railway!)
-// This ensures Railway sees the app as "Healthy" even if the frontend isn't built yet.
-app.get('/health', (req, res) => {
-    res.status(200).send('Backend is healthy and running!');
-});
+// 4. FRONTEND STATIC FILES (Fixed for Express 5)
+const buildPath = path.join(__dirname, "build");
+app.use(express.static(buildPath));
 
-// -------------------------------------------------------------------------
-// FRONTEND SERVING (Fixed for Express 5)
-// -------------------------------------------------------------------------
-
-// 1. Serve Static files
-app.use(express.static(path.join(__dirname, "build")));
-
-// 2. Catch-All Route (FIXED: '*' changed to regex /(.*)/ for Express 5)
-// This handles React routing (e.g., refreshing the page on /dashboard)
+// Catch-all for React Routing
 app.get(/(.*)/, (req, res) => {
-    const indexPath = path.join(__dirname, 'build', 'index.html');
-    
+    const indexPath = path.join(buildPath, 'index.html');
     res.sendFile(indexPath, (err) => {
         if (err) {
-            // If the build folder is missing, don't crash. 
-            // Just say the backend is running.
-            res.status(200).send("Backend is running! (React build folder not found)");
+            // If index.html is missing, we already sent the "Live" message above
+            // so we just end the request here.
+            res.status(200).send("Backend is running (Build folder not found)");
         }
     });
 });
 
-// Start Server
+// 5. START SERVER (Binding to 0.0.0.0 is required)
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Backend is running on Port ${PORT} 😀`);
 });
