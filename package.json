@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "vercel-start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
@@ -18,7 +18,9 @@
     "mongodb": "4.1",
     "mongoose": "^9.0.0",
     "multer": "^2.0.2",
-    "nodemon": "^3.1.11",
     "pdf-parse": "^1.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }
