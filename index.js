@@ -16,7 +16,15 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => res.status(200).send('Server is live!'));
 
 // 3. MIDDLEWARE
-app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({
+    origin: [
+        "https://resume-ats-mern-stack-frontend.vercel.app", // Your actual URL
+        "http://localhost:5173", 
+        "http://localhost:3000"
+    ], 
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 app.use(express.json());
 
 // 4. DATABASE CONNECTION
