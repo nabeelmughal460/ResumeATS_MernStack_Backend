@@ -1,41 +1,45 @@
-// import dotenv from 'dotenv';
-const dotenv = require('dotenv');
-dotenv.config();
-const express = require('express');
-const cors = require('cors');
-const path =require('path');
-// ('dotenv').config();
+// Load environment variables
+require("dotenv").config();
 
-// require('./conn');
-const connectToMongoDB = require('./conn');
-const userroute= require('./Routes/userroute');
-const resumeroute= require('./Routes/resumeroute');
-// app.get('/', (req, res) => {
-//   res.send({message: 'Hello from backend 😎'});
-// });
+const express = require("express");
+const cors = require("cors");
 
+// Global error handlers (prevent crash)
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+});
+
+// MongoDB connection
+const connectToMongoDB = require("./conn");
+
+// Create express app
 const app = express();
 const PORT = process.env.PORT || 4000;
-//connect to mongodb
-connectToMongoDB();
-app.use(cors({
-    credentials: true,
-    // origin: 'http://localhost:5173',//or local server
-    origin:"*" //for vercel deployment
 
-}));
-app.use(express.json()); 
-app.use('/api/resume',resumeroute);  
-app.use('/api/user',userroute);
- 
+// Connect to MongoDB
+connectToMongoDB();
+
+// Middleware
+app.use(cors({ origin: "*", credentials: true }));
+app.use(express.json());
+
+// API routes
+const userRoute = require("./Routes/userroute");
+const resumeRoute = require("./Routes/resumeroute");
+
+app.use("/api/user", userRoute);
+app.use("/api/resume", resumeRoute);
+
+// Health check route (Railway likes this)
 app.get("/", (req, res) => {
   res.status(200).send("Backend running 🚀");
 });
-app.listen(PORT,()=>{
-    console.log("backend is running on Port 😀");
-    
-}) //for local server
 
-
-module.exports=app;
-
+// Start server
+app.listen(PORT, () => {
+  console.log(`Backend is running on Port ${PORT} 😀`);
+});
