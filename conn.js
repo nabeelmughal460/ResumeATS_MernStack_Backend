@@ -1,27 +1,40 @@
-const mongoose = require('mongoose');
+// // tasleem123
+// // Tasleem123
+// // mongodb+srv://tasleem123:<db_password>@cluster0.ce9ffyd.mongodb.net/?appName=Cluster0
+// // const{mongoose}=require('mongoose');
+// // mongoose.connect('mongodb+srv://tasleem123:Tasleem123@cluster0.ce9ffyd.mongodb.net/?appName=Cluster0')
+// // .then(()=>{
+// //     console.log("connected to mongodb 💋😀");
+// // }).catch((err)=>{
+// //     console.log("error connecting to mongodb", err);
+// // });
 
-let isConnected = false;
+// // for vercel deployment i comment this code 
+// // vercel to run Backend use serverles function
 
-const connectToMongoDB = async () => {
-    if (isConnected) {
-        console.log("Using existing MongoDB connection");
-        return;
-    }
+// const mongoose = require('mongoose');
+// // require('dotenv').config();
+// // import dotenv from 'dotenv';
+// const dotenv = require('dotenv');
+// dotenv.config();
 
-    try {
-        const dbUri = process.env.MONGODB_URI;
-        if (!dbUri) {
-            throw new Error("MONGODB_URI is not defined in environment variables");
-        }
+// let isConnected = false;
 
-        await mongoose.connect(dbUri);
-        isConnected = true;
-        console.log("Connected to MongoDB 😀💋");
-    } catch (err) {
-        console.error("Error connecting to MongoDB:", err.message);
-        // On Railway, you might want to exit if the DB fails
-        // process.exit(1); 
-    }
-};
+// async function connectToMongoDB() {
+//     try {
+//         if (isConnected) return;
 
-module.exports = connectToMongoDB;
+//         await mongoose.connect(process.env.MONGODB_URI);
+//         isConnected = true;
+//         console.log("Connected to MongoDB 😀💋");
+//     } catch (err) {
+//         console.error("Error connecting to MongoDB:", err);
+//     }
+// }
+
+// module.exports = connectToMongoDB;
+
+// //
+
+// // add middleware to check connection before each request
+
