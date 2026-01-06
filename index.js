@@ -8,48 +8,37 @@ const resumeroute = require('./Routes/resumeroute');
 
 const app = express();
 
-// IMPORTANT: Railway provides the PORT. We must use process.env.PORT.
+// 1. DYNAMIC PORT: Railway assigns this. Do not hardcode 8080.
 const PORT = process.env.PORT || 8080;
 
-// Connect to MongoDB
-connectToMongoDB();
+// 2. IMMEDIATE HEALTH CHECK: This stops the SIGTERM/Stopping Container error.
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/', (req, res) => res.status(200).send('Server is live!'));
 
-// 1. MIDDLEWARE
-app.use(cors({
-    origin: "*",
-    credentials: true
-}));
+// 3. MIDDLEWARE
+app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 
-// 2. RAILWAY HEALTH CHECK (Add this BEFORE other routes)
-// This ensures Railway stays connected even if the build folder is missing.
-app.get('/', (req, res) => {
-    res.status(200).send("Server is live and healthy! 😀");
-});
+// 4. DATABASE CONNECTION
+connectToMongoDB();
 
-// 3. API ROUTES
+// 5. API ROUTES
 app.use('/api/resume', resumeroute);
 app.use('/api/user', userroute);
 
-// 4. FRONTEND STATIC FILES (Fixed for Express 5)
+// 6. FRONTEND SERVING (Regex fixed for Express 5)
 const buildPath = path.join(__dirname, "build");
 app.use(express.static(buildPath));
 
-// Catch-all for React Routing
 app.get(/(.*)/, (req, res) => {
-    const indexPath = path.join(buildPath, 'index.html');
-    res.sendFile(indexPath, (err) => {
+    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
         if (err) {
-            // If index.html is missing, we already sent the "Live" message above
-            // so we just end the request here.
-            res.status(200).send("Backend is running (Build folder not found)");
+            res.status(200).send("Backend is active. Frontend build folder not found.");
         }
     });
 });
 
-// 5. START SERVER (Binding to 0.0.0.0 is required)
+// 7. LISTEN ON 0.0.0.0 (Crucial for Railway networking)
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend is running on Port ${PORT} 😀`);
+    console.log(`🚀 Server confirmed on port ${PORT}`);
 });
-
-module.exports = app;
