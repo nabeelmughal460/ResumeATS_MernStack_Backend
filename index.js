@@ -20,8 +20,8 @@ const PORT = process.env.PORT || 4000;
 // connectToMongoDB();
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:5173',//or local server
-    // origin:"*" //for vercel deployment
+    // origin: 'http://localhost:5173',//or local server
+    origin:"*" //for vercel deployment
 
 }));
 app.use(express.json()); 
