@@ -28,13 +28,9 @@ app.use(express.json());
 app.use('/api/resume',resumeroute);  
 app.use('/api/user',userroute);
  
-// serve static files from the React frontend app  build folder
-app.use(express.static(path.join(__dirname,"build")));
-// handle React routing, return  index.js all requests to React app   
-app.get('/',(req,res)=>{
-    res.sendFile(path.join(__dirname,'build','index.html'));
+app.get("/", (req, res) => {
+  res.status(200).send("Backend running 🚀");
 });
-
 app.listen(PORT,()=>{
     console.log("backend is running on Port 😀");
     
