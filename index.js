@@ -1,45 +1,48 @@
-// Load environment variables
-require("dotenv").config();
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const connectToMongoDB = require('./conn');
+const userroute = require('./Routes/userroute');
+const resumeroute = require('./Routes/resumeroute');
 
-const express = require("express");
-const cors = require("cors");
-
-// Global error handlers (prevent crash)
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
-});
-
-process.on("unhandledRejection", (reason) => {
-  console.error("Unhandled Rejection:", reason);
-});
-
-// MongoDB connection
-const connectToMongoDB = require("./conn");
-
-// Create express app
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 
 // Connect to MongoDB
 connectToMongoDB();
 
 // Middleware
-app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({
+    origin: "*", // Adjust this to your specific frontend URL for better security later
+    credentials: true
+}));
 app.use(express.json());
 
-// API routes
-const userRoute = require("./Routes/userroute");
-const resumeRoute = require("./Routes/resumeroute");
+// API Routes
+app.use('/api/resume', resumeroute);
+app.use('/api/user', userroute);
 
-app.use("/api/user", userRoute);
-app.use("/api/resume", resumeRoute);
+// Serve static files from the React frontend "build" folder
+// Note: Ensure the 'build' folder exists in your root directory on Railway
+const buildPath = path.join(__dirname, "build");
+app.use(express.static(buildPath));
 
-// Health check route (Railway likes this)
-app.get("/", (req, res) => {
-  res.status(200).send("Backend running 🚀");
+// Handle React routing: Return index.html for any unknown routes
+app.get('*', (req, res) => {
+    const indexPath = path.join(buildPath, 'index.html');
+    
+    // Check if the file exists before sending to prevent crashing
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            // If index.html is missing, send a basic health check response
+            res.status(200).send("Backend is running (Frontend build not found)");
+        }
+    });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Backend is running on Port ${PORT} 😀`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Backend is running on Port ${PORT} 😀`);
 });
+
+module.exports = app;
