@@ -4,7 +4,7 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const connectToMongoDB = require('./conn');
+ require('./conn');
 const userroute = require('./Routes/userroute');
 const resumeroute = require('./Routes/resumeroute');
 
@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Connect to MongoDB
-connectToMongoDB();
+// connectToMongoDB();
 
 // Middleware
 app.use(cors({
