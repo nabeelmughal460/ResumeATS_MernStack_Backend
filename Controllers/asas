@@ -1,0 +1,97 @@
+const resumeModel = require("../Models/Resume");
+const mongoose = require("mongoose");
+const pdfParse = require("pdf-parse");
+const { CohereClient } = require("cohere-ai");
+const fs = require('fs');
+
+const cohere = new CohereClient({
+  // ⚠️ WARNING: Use a new Environment Variable for this token. 
+  // Your previous token was exposed in the question history.
+  token: "nfeTNK6VrdgsntE8QRvrnWJXO4RlVzAnkKEvQCVQ" 
+});
+
+exports.CreateResume = async (req, res) => {
+  try {
+    const { job_Desc, userId } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No PDF file uploaded." });
+    }
+
+    // 1. Parse PDF
+    const pdfpath = req.file.path;
+    const dataBuffer = fs.readFileSync(pdfpath);
+    const pdfData = await pdfParse(dataBuffer);
+
+    // 2. Prepare the Message
+    // Note: I added an instruction to return JSON to make it easier to use later
+    const message = `
+      You are a resume screening assistant.
+      Compare the following resume text with the provided Job Description (JD).
+      
+      // Return your response in this specific format:
+      // - Match Score: (0-100)
+      // - Feedback: (Short summary)
+
+      Resume:
+      ${pdfData.text}
+
+      Job Description:
+      ${job_Desc}
+      Return the score and a brief explanation in this format:
+      Score: XX
+      Reason: ...`;
+
+    // 3. Call Cohere Chat API
+    const response = await cohere.chat({
+    model: "command-a-03-2025", // <--- THE FIX    ,
+    message: message,
+      temperature: 0.3, // Lower temperature is better for analysis/scoring
+    });
+
+    // 4. Handle Response
+    let result = response.text;
+    // console.log( result);
+    // const match= result.match(/Score:\s*(\d+)/);
+    // const score = match ? parseInt(match[1], 10) : null;
+    // const reasonMatch = result.match(/Reason:\s*([\s\S]*)/);
+    // const reason = reasonMatch ? reasonMatch[1].trim() : null;
+    // console.log("Extracted Score:", score);
+    // console.log("Extracted Reason:", reason);
+    const match = result.match(/Score:\s*(\d+)/);
+    const score = match ? parseInt(match[1], 10): null;
+    const reasonMatch = result.match(/Reason:\s*([\s\S]*)/);
+    const reason = reasonMatch ? reasonMatch [1].trim(): null;
+    console.log(score)
+    console.log(reason)
+    // return res.status(200).json({
+    //   success: true,
+    //   analysis: result
+    // });
+      const newResume = new resumeModel.resumeModel({
+        userId,
+        resumeName: req.file.originalname,
+        job_Desc,
+        score,
+        feedback:reason
+      });
+      await newResume.save();
+      fs.unlinkSync(pdfpath); // Delete the file after processing
+      res.status(201).json({
+        message: "Resume analyzed and saved successfully",
+        data: newResume
+      });
+  } catch (error) {
+    console.error("Cohere API Error:", error);
+    
+    // Check for specific API errors to give better feedback to the frontend
+    if (error.statusCode === 404) {
+        return res.status(404).json({ message: "AI Model not found or deprecated.", details: error.message });
+    } 
+
+    return res.status(500).json({
+      message: error.message,
+      error: "Server Error",
+    });
+  }
+};
